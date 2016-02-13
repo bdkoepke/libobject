@@ -17,11 +17,11 @@ weave("${libobject_TEX}")
 add_custom_target(tangle DEPENDS ${libobject_H} ${libobject_C})
 add_custom_target(weave DEPENDS ${libobject_TEX})
 
-add_library(libobject SHARED ${libobject_C})
-add_dependencies(libobject tangle)
-target_link_libraries(libobject m)
+add_library(object SHARED ${libobject_C})
+add_dependencies(object tangle)
 
 add_latex_document(libobject.tex
+                   INPUTS preamble.tex
                    FORCE_PDF
-                   TARGET_NAME _libobject)
-add_dependencies(_libobject_pdf weave)
+                   TARGET_NAME libobject)
+add_dependencies(libobject_pdf weave)

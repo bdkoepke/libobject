@@ -1,63 +1,64 @@
 \section{Object Definition}
-This is a simple object model. By default objects can be freed and you can get a string representation of the object.
-There are default functions for both of these. The \_object\_free just calls the regular stdlib free, and \_object\_to\_string prints an object similar to how objects are printed in java.
-<<object.h>>=
-#pragma once
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <contract.h>
-#include "class.h"
 
-typedef struct _object_vtable object_vtable;
+An object inherits all the abilities of a class. In addition, an object can also have it's memory freed and can be converted to a string representation.
+<<object-h>>=
+typedef struct _Object Object;
 typedef struct {
-  object_vtable *vtable;
-} Object;
-struct _object_vtable {
-  const Class class;
+  class_vtable class;
   const char * const (*to_string)(const Object * const);
   void (*free)(Object *);
-};
-
-/**
- * Frees the memory used by the specified object.
- *
- * @param o the object to free.
- */
+} object_vtable;
 void object_free(Object *o);
-
-/**
- * Gets a string representation of the specified object.
- *
- * @param o the object to get the string representation of.
- * @return a string representation of the object.
- */
 const char * const object_to_string(const Object * const o);
+@
+<<object-typedef-c>>=
+struct _Object {
+  object_vtable *vtable;
+};
+@
 
+We also have default implementations of \emph{free} and \emph{to\_string}.
+<<object-default-h>>=
 void _object_free(Object *o);
 const char * const _object_to_string(const Object * const o);
 @
-<<object.c>>=
-#include "object.h"
 
-void _object_free(Object *o) { free(contract_requires_non_null(o)); }
+We define the interface method for \emph{object\_free} where we invoke the vtable implementation and also the default implementation which runs the stdlib free.
+<<object-free-c>>=
+void object_free(Object *o) { o->vtable->free(o); }
+void _object_free(Object *o) { free(o); }
+@
 
-void object_free(Object *o) { o->vtable->free(contract_requires_non_null(o)); }
-
-const Class * const object_class(const Object * const o) {
-  contract_requires_non_null(o);
-  return &o->vtable->class;
-}
-
+Next we define the \emph{to\_string} method for objects. Make sure you free the string once it goes out of scope.
+<<object-to-string-c>>=
 const char * const object_to_string(const Object * const o) {
-  return o->vtable->to_string(contract_requires_non_null(o));
+  return o->vtable->to_string(o);
 }
-
+@
+The default \emph{to\_string} implementation is the same as the default Java implementation. We get the name of the class and the hex representation of the pointer. From here we print `${class\_name}@${pointer}'.
+<<object-to-string-c>>=
 const char * const _object_to_string(const Object * const o) {
-  const char * const name = class_name(object_class(o));
+  const char * const name = class_name((Class *)o);
   size_t size = sizeof(void *) + sizeof('@') + strlen(name) + sizeof('\n');
   char *buffer = malloc(size);
   snprintf(buffer, size, "%s@%x", name, (unsigned int)o);
   return buffer;
 }
+@
+
+The final header and object implementations.
+<<object.h>>=
+#pragma once
+#include "class.h"
+<<object-h>>
+<<object-default-h>>
+@
+<<object.c>>=
+#include "object.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+<<object-typedef-c>>
+<<object-free-c>>
+<<object-to-string-c>>
 @

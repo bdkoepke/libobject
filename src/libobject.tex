@@ -1,15 +1,9 @@
 \documentclass{article}
-\usepackage[margin=1in]{geometry}
-\usepackage{noweb}
-\pagestyle{noweb}
-\noweboptions{}
-\title{Literate Object Oriented Library.}
-\author{Brandon Koepke}
-
+\input{preamble}
 \begin{document}
 \maketitle
 \tableofcontents
-\abstract{Implemented of a literate object oriented library with deep integration with design by contracts.}
+\abstract{The following is a simple object library for C. An object has a class name, a to\_string method, and a free method. We also included default implementations of to\_string and free that will be suitable for most implementations.}
 \input{class}
 \input{object}
 \end{document}

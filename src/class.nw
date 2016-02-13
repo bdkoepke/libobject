@@ -1,22 +1,39 @@
 \section{Class Definition}
-Simple definition of a class contains the class name and nothing else. In the future we may want to add additional members here for introspection but at the moment this is sufficient.
-<<class.h>>=
-#pragma once
-#include <contract.h>
-typedef struct {
-  const char * const name;
-} Class;
+We start by defining a basic class structure. We are forward declaring our \emph{Class} to ensure that the implementation details can be changed at a later date.
+<<class-typedef-h>>=
+typedef struct _Class Class;
+@
 
-/**
- * Gets the class name.
- *
- * @param c the class to get the name of.
- * @return the name of the class.
- */
+The class vtable contains a single operation, the ability to get the class name. The vtable should also be considered opaque to other objects, manually manipulating this from outside a class (including invoking it) is considered undefined behavior. In addition, by defining the name as a function as opposed to including a string reference enables us to change the implementation in child classes.
+<<class-vtable-h>>=
+typedef struct {
+  const char * const (*name)(const Class * const);
+} class_vtable;
+@
+
+To get the class name safely, use the following method.
+<<class-name-h>>=
 const char * const class_name(const Class * const c);
 @
+
+The class implementation only contains the class vtable, everything else is deferred to implementers.
+<<class-typedef-c>>=
+struct _Class {
+  class_vtable *vtable;
+};
+@
+
+In the \emph{class\_name} implementation we invoke the name function from the vtable against the class instance passed.
 <<class.c>>=
 #include "class.h"
+<<class-typedef-c>>
+const char * const class_name(const Class * const c) { return c->vtable->name(c); }
+@
 
-const char * const class_name(const Class * const c) { return c->name; }
+Finally we have the completed header.
+<<class.h>>=
+#pragma once
+<<class-typedef-h>>
+<<class-vtable-h>>
+<<class-name-h>>
 @
