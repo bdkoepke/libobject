@@ -1,39 +1,40 @@
 \section{Class Definition}
 We start by defining a basic class structure. We are forward declaring our \emph{Class} to ensure that the implementation details can be changed at a later date.
-<<class-typedef-h>>=
+<<Class Declaration>>=
 typedef struct _Class Class;
 @
 
 The class vtable contains a single operation, the ability to get the class name. The vtable should also be considered opaque to other objects, manually manipulating this from outside a class (including invoking it) is considered undefined behavior. In addition, by defining the name as a function as opposed to including a string reference enables us to change the implementation in child classes.
-<<class-vtable-h>>=
+<<Default Class Functions>>=
 typedef struct {
   const char * const (*name)(const Class * const);
 } class_vtable;
 @
 
-To get the class name safely, use the following method.
-<<class-name-h>>=
-const char * const class_name(const Class * const c);
+To get the class name safely, use the following method. The class name implementation invokes the name method from the vtable on the class object itself.
+<<Class Name Declaration>>=
+const char * const class_name(const Class * const);
+@
+<<Class Name Implementation>>=
+const char * const class_name(const Class * const c) { return c->vtable->name(c); }
 @
 
 The class implementation only contains the class vtable, everything else is deferred to implementers.
-<<class-typedef-c>>=
+<<Class Implementation>>=
 struct _Class {
   class_vtable *vtable;
 };
 @
 
-In the \emph{class\_name} implementation we invoke the name function from the vtable against the class instance passed.
-<<class.c>>=
-#include "class.h"
-<<class-typedef-c>>
-const char * const class_name(const Class * const c) { return c->vtable->name(c); }
-@
-
-Finally we have the completed header.
+Finally we have the completed class declaration and implementation.
 <<class.h>>=
 #pragma once
-<<class-typedef-h>>
-<<class-vtable-h>>
-<<class-name-h>>
+<<Class Declaration>>
+<<Default Class Functions>>
+<<Class Name Declaration>>
+@
+<<class.c>>=
+#include "class.h"
+<<Class Implementation>>
+<<Class Name Implementation>>
 @

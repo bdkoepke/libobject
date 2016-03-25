@@ -1,7 +1,7 @@
 \section{Object Definition}
 
-An object inherits all the abilities of a class. In addition, an object can also have it's memory freed and can be converted to a string representation.
-<<object-h>>=
+An object inherits all the abilities of a class. In addition, an object can also have it's memory freed and can be converted to a string representation. Here we are hiding the implementation of the object entirely, but for implementers of this object library yuou must include a pointer to the vtable as the first part of your object structure.
+<<Object Declaration>>=
 typedef struct _Object Object;
 typedef struct {
   class_vtable class;
@@ -11,32 +11,33 @@ typedef struct {
 void object_free(Object *o);
 const char * const object_to_string(const Object * const o);
 @
-<<object-typedef-c>>=
+<<Object Implementation>>=
 struct _Object {
   object_vtable *vtable;
 };
 @
 
-We also have default implementations of \emph{free} and \emph{to\_string}.
-<<object-default-h>>=
+We also have default implementations of \emph{free} and \emph{to\_string}. These are not intended to be called directly, rather these can be set as your function implementations on your subclass.
+<<Default Object Method Declarations>>=
 void _object_free(Object *o);
 const char * const _object_to_string(const Object * const o);
 @
 
-We define the interface method for \emph{object\_free} where we invoke the vtable implementation and also the default implementation which runs the stdlib free.
-<<object-free-c>>=
+We now define the interface method for \emph{object\_free} where we invoke the vtable implementation and also the default implementation which runs the stdlib free.
+<<Default Object Free Implementation>>=
 void object_free(Object *o) { o->vtable->free(o); }
 void _object_free(Object *o) { free(o); }
 @
 
 Next we define the \emph{to\_string} method for objects. Make sure you free the string once it goes out of scope.
-<<object-to-string-c>>=
+<<Default Object ToString Implementation>>=
 const char * const object_to_string(const Object * const o) {
   return o->vtable->to_string(o);
 }
 @
+
 The default \emph{to\_string} implementation is the same as the default Java implementation. We get the name of the class and the hex representation of the pointer. From here we print `${class\_name}@${pointer}'.
-<<object-to-string-c>>=
+<<Java Style Object ToString>>=
 const char * const _object_to_string(const Object * const o) {
   const char * const name = class_name((Class *)o);
   size_t size = sizeof(void *) + sizeof('@') + strlen(name) + sizeof('\n');
@@ -46,19 +47,20 @@ const char * const _object_to_string(const Object * const o) {
 }
 @
 
-The final header and object implementations.
+Finally we have the object header and implementation files all together.
 <<object.h>>=
 #pragma once
 #include "class.h"
-<<object-h>>
-<<object-default-h>>
+<<Object Declaration>>
+<<Default Object Method Declarations>>
 @
 <<object.c>>=
 #include "object.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-<<object-typedef-c>>
-<<object-free-c>>
-<<object-to-string-c>>
+<<Object Implementation>>
+<<Default Object Free Implementation>>
+<<Default Object ToString Implementation>>
+<<Java Style Object ToString>>
 @
